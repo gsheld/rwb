@@ -77,8 +77,8 @@ use Time::ParseDate;
 #
 # You need to override these for access to your database
 #
-my $dbuser="gms130";
-my $dbpasswd="franco4u";
+my $dbuser="bjs782";
+my $dbpasswd="passwordle";
 
 
 #
@@ -119,6 +119,7 @@ my $logincomplain=0;
 #
 my $action;
 my $run;
+
 
 if (defined(param("act"))) { 
   $action=param("act");
@@ -163,16 +164,6 @@ if (defined($inputcookiecontent)) {
 } else {
   # No cookie, treat as anonymous user
   ($user,$password) = ("anon","anonanon");
-}
-
-# Grabbing cycles from oracle database.
-
-if ($action eq "getCycles") {
-	if ($run) {
-		my @rows;
-		eval { @rows = ExecSQL($dbuser, $dbpasswd, "select cycle from CS339.individual group by cycle order by cycle;"); };
-		return @rows;
-	}
 }
 
 #
@@ -347,18 +338,18 @@ if ($action eq "base") {
   # And something to color (Red, White, or Blue)
   #
   print "<div id=\"color\" style=\"width:100\%; height:10\%\"></div>";
-
+  
   #
   #
   # And a map which will be populated later
   #
-  print "<div id=\"map\" style=\"width:80\%; height:80\%\; float: left\"></div>";
- 
+  print "<div id=\"map\" style=\"width:80\%; height:80\%\; float:left\"></div>";
+  
   #
-  # An area for menu options.
   #
-  print "<div id=\"options\" style=\"width:20\%; height:80\%\; float: right\"></div>"; 
-
+  # And an area for menu options
+  #
+  print "<div id=\"options\" style=\"width:20\%; height:80\%\; float:right\"></div>";
 
   #
   # And a div to populate with info about nearby stuff
@@ -390,7 +381,7 @@ if ($action eq "base") {
     if (UserCan($user,"give-cs-ind-data")) {
       print "<p><a href=\"rwb.pl?act=give-cs-ind-data\">Geolocate Individual Contributors</a></p>";
     }
-    if (UserCan($user,"manage-users") || UserCan($user,"invite-users")) {
+    if (UserCan($user,"manage-users") || UserCan($user,"-users")) {
       print "<p><a href=\"rwb.pl?act=invite-user\">Invite User</a></p>";
     }
     if (UserCan($user,"manage-users") || UserCan($user,"add-users")) { 
@@ -405,6 +396,26 @@ if ($action eq "base") {
   }
 
 }
+
+#
+# GET_CYCLES
+#
+# Returns the valid cycles from the FEC data
+#
+# Note that this only includes candidate, committee, and individual data
+#
+#
+
+if ($action eq "get_cycles") {
+  if ($run) {
+    my @cycles;
+    eval { @cycles = ExecSQL($dbuser,$dbpasswd, "select distinct cycle from 
+      cs339.committee_master union select distinct cycle from cs339.candidate_master union select 
+      distinct cycle from cs339.individual;","COL");};
+    return @cycles; 
+  }
+}
+
 
 #
 #
@@ -486,10 +497,101 @@ if ($action eq "near") {
   }
 }
 
+#
+# INVITE USER
+#
+# Give a user the option to invite another user
+#
 
-if ($action eq "invite-user") { 
-  print h2("Invite User Functionality Is Unimplemented");
+
+
+if ($action eq "invite-user") {
+  if (!UserCan($user,"invite-users")) {
+    print h2('You do not have the required permissions to invite users.');
+  } else {
+    if (!$run) {
+      print start_form(-name=>'InviteUser'),
+        h2('Invite User'),
+              "Email: ", textfield(-name=>'email'),
+                p,
+                  hidden(-name=>'run',-default=>['1']),
+                    hidden(-name=>'act',-default=>['invite-user']),
+                      submit,
+                        end_form,
+                          hr;
+
+    } else {
+
+      
+       my $address=param('email');
+       my $subject='Your_New_Account';
+       my $url="Your New Account can be Created Here <http://murphy.wot.eecs.northwestern.edu/~bjs782/rwb/rwb.pl?act=one-time-add-user&one-time-id=";
+       my $onetimeid = int(rand(1000000000000000000));
+       my $content=$url.$onetimeid.">";
+
+       open(MAIL,"| mailx -s $subject $address") or die "Can't run mail\n";
+       print MAIL $content;
+       close(MAIL);
+
+       eval {ExecSQL($dbuser, $dbpasswd, "insert into rwb_users (name,password,email,referer,guid) values ('temp','temptemp',?,?,?)",undef,$address,$user,$onetimeid);  };
+  
+    }
+  }
+  print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
 }
+
+#
+#
+#  ONE-TIME-ADD-USER
+#
+
+if ($action eq "one-time-add-user") {
+
+    if (!$run) {
+
+    my $id=param('one-time-id');
+
+      print start_form(-name=>'OneTimeAddUser'),
+        h2('One Time Add User'),
+          "Name: ", textfield(-name=>'name'),
+            p,
+              "Password: ", textfield(-name=>'password'),
+                p,
+                  hidden(-name=>'run',-default=>['1']),
+                    hidden(-name=>'act',-default=>['one-time-add-user']),
+                      hidden(-name=>'one-time-id',-default=>[$id]),  
+                        submit,
+                          end_form,
+                            hr;
+    } else {
+      my $name=param('name');
+      my $password=param('password');
+      my $userid=param('one-time-id');
+      my @col;
+      my @row;
+      
+      eval {@col=ExecSQL($dbuser,$dbpasswd,"select count(*) from rwb_users where guid=?","COL",$userid);};
+
+     if (@col[0] > 0)
+     {
+      eval {@row = ExecSQL($dbuser,$dbpasswd,"update rwb_users set name=?, password=?, guid=? where guid=?",undef,$name,$password,"",$userid);};
+     print "User $name successfully created.";
+     }
+     else
+     {
+       print "link is no longer valid";
+     }
+  
+    }
+ 
+  print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+}
+
+
+
+
+
+
 
 if ($action eq "give-opinion-data") { 
   print h2("Giving Location Opinion Data Is Unimplemented");

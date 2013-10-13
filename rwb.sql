@@ -48,6 +48,13 @@ create table rwb_users (
 -- validated by an existing user (but not nobody)
 --
   referer varchar(64) not null references rwb_users(name),
+
+--
+-- GUID used to create a one-time link for inviting users
+--
+--
+  guid NUMBER,
+
 --
 -- Only root can refer himself
 --

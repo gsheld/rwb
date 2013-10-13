@@ -1,4 +1,4 @@
-//
+///
 // Global state
 //
 // map     - the map object
@@ -13,7 +13,6 @@
 if (navigator.geolocation)  {
     navigator.geolocation.getCurrentPosition(Start);
 }
-
 
 function UpdateMapById(id, tag) {
 
@@ -52,9 +51,15 @@ function UpdateMap()
 
     ClearMarkers();
 
-    UpdateMapById("committee_data","COMMITTEE");
-    UpdateMapById("candidate_data","CANDIDATE");
-    UpdateMapById("individual_data", "INDIVIDUAL");
+    if (document.dataSelection.comm.checked)
+    {UpdateMapById("committee_data","COMMITTEE");};
+    
+    if (document.dataSelection.cand.checked)
+    {UpdateMapById("candidate_data","CANDIDATE");};
+    
+    if (document.dataSelection.ind.checked)
+    {UpdateMapById("individual_data", "INDIVIDUAL");};
+    
     UpdateMapById("opinion_data","OPINION");
 
 
@@ -90,8 +95,19 @@ function ViewShift()
     color.innerHTML="<b><blink>Querying...("+ne.lat()+","+ne.lng()+") to ("+sw.lat()+","+sw.lng()+")</blink></b>";
     color.style.backgroundColor='white';
    
+    var groupString="opinions";
+
+    if (document.dataSelection.comm.checked)
+    {groupString+=",committees";};
+    if (document.dataSelection.cand.checked)
+    {groupString+=",candidates"};
+    if (document.dataSelection.ind.checked)
+    {groupString+=",individuals";};
+
+    
     // debug status flows through by cookie
-    $.get("rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng()+"&format=raw&what=committees,candidates,individuals,opinions&cycle=1112", NewData);
+    $.get("rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng()+"&format=raw&what="+groupString+"&cycle=1112", NewData);
+
 }
 
 
@@ -104,7 +120,6 @@ function Reposition(pos)
     usermark.setPosition(new google.maps.LatLng(lat,long));
 }
 
-
 function Start(location) 
 {
   var lat = location.coords.latitude;
@@ -112,9 +127,6 @@ function Start(location)
   var acc = location.coords.accuracy;
   
   var mapc = $( "#map");
-
- 	var cycles = [];	
-
 
   map = new google.maps.Map(mapc[0], 
 			    { zoom:16, 
@@ -132,17 +144,20 @@ function Start(location)
   color.style.backgroundColor='white';
   color.innerHTML="<b><blink>Waiting for first position</blink></b>";
 
+  var options = document.getElementById("options");
+  options.style.backgroundColor='white';
+  options.innerHTML= '<form name="dataSelection">' +
+                     '<input type="checkbox" name="comm"> Committee Data<br>' +
+                     '<input type="checkbox" name="cand"> Candidate Data<br>' +
+                     '<input type="checkbox" name="ind"> Individual Data<br>' +
+                     '<input type="button" name="makeChange" onClick="ViewShift()" value="Submit"<br>'
+                     '</form>';
+
   google.maps.event.addListener(map,"bounds_changed",ViewShift);
   google.maps.event.addListener(map,"center_changed",ViewShift);
   google.maps.event.addListener(map,"zoom_changed",ViewShift);
 
   navigator.geolocation.watchPosition(Reposition);
-
-  $.get("rwb.pl?act=getCycles&rows="+cycles+"&format=raw", NewData);
-  var options = document.getElementById("options");
-  options.innerHTML= '<input type="checkbox" name="candidates" value="cand"> Candidates<br>' + 
- 		     '<input type="checkbox" name="committees" value="comm"> Committees<br>' 
+    
 }
-
-
 

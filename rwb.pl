@@ -78,7 +78,8 @@ use Time::ParseDate;
 # You need to override these for access to your database
 #
 
-use LocalSettings;
+my $dbuser = "bjs782";
+my $dbpasswd = "passwordle";
 
 
 #

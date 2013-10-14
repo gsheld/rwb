@@ -50,12 +50,6 @@ create table rwb_users (
   referer varchar(64) not null references rwb_users(name),
 
 --
--- GUID used to create a one-time link for inviting users
---
---
-  guid NUMBER,
-
---
 -- Only root can refer himself
 --
   constraint sane_referer check (name='root' or name<>referer)

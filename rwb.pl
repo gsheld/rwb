@@ -360,11 +360,17 @@ if ($action eq "base") {
 
   print start_form(-name=>'PrintCycles'),
                p,
+             
+
+
                   popup_menu(
                     -name=>'chosen_cycles',
                     -onChange=>"ViewShift()",
                      -values=>[@lcycles],
                       ),
+              
+
+
                     hidden(-name=>'run',-default=>['1']),
                       hidden(-name=>'act',-default=>['base']),
                           end_form,
@@ -702,6 +708,9 @@ if ($action eq "give-opinion-data") {
   }
 
   print "</div>";
+
+  print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+
 
 }
 

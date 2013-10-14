@@ -511,30 +511,74 @@ if ($action eq "invite-user") {
     print h2('You do not have the required permissions to invite users.');
   } else {
     if (!$run) {
+
+         my ($d1, $d2, $d3, $d4, $d5, $d6, $d7, $d8); 
+         $d1=$d2=$d3=$d4=$d5=$d6=$d7=$d8='';
+
+         if (!UserCan($user,"add-users")) {
+          $d1 = 'add-users';
+         }
+         if (!UserCan($user,"give-cs-ind-data")) {
+          $d2 = 'give-cs-ind-data';
+         }
+         if (!UserCan($user,"give-opinion-data")) {
+          $d3 = 'give-opinion-data';
+         }
+         if (!UserCan($user,"invite-users")) {
+          $d4 = 'invite-users';
+         }
+         if (!UserCan($user,"manage-users")) {
+          $d5 = 'manage-users';
+         }
+         if (!UserCan($user,"query-cs-ind-data")) {
+          $d6 = 'query-cs-ind-data';
+         }
+         if (!UserCan($user,"query-opinion-data")) {
+          $d7 = 'query-opinion-data';
+         }
+         if (!UserCan($user,"query-fec-data")) {
+          $d8 = 'query-fec-data';
+         }
+ 
+
+
       print start_form(-name=>'InviteUser'),
         h2('Invite User'),
               "Email: ", textfield(-name=>'email'),
-                p,
-                  hidden(-name=>'run',-default=>['1']),
-                    hidden(-name=>'act',-default=>['invite-user']),
-                      submit,
-                        end_form,
-                          hr;
+                p,   
+
+                  checkbox_group(
+                      -name=>'permission_choices',
+                      -values=>['add-users','give-cs-ind-data','give-opinion-data','invite-users',
+                                'manage-users','query-cs-ind-data','query-opinion-data','query-fec-data'],
+                      -linebreak=>'true',    
+                      -disabled=>[$d1,$d2,$d3,$d4,$d5,$d6,$d7,$d8],
+                       ),
+
+                    hidden(-name=>'run',-default=>['1']),
+                      hidden(-name=>'act',-default=>['invite-user']),
+                        submit,
+                          end_form,
+                            hr;
 
     } else {
 
-      
+       my @permission_choices=param('permission_choices');      
+       my $sendPermissions= join(',',@permission_choices);
+
+       my $mailfrom = 'bjs782@murphy.wot.ece.northwestern.edu';
        my $address=param('email');
        my $subject='Your_New_Account';
        my $url="Your New Account can be Created Here <http://murphy.wot.eecs.northwestern.edu/~bjs782/rwb/rwb.pl?act=one-time-add-user&one-time-id=";
        my $onetimeid = int(rand(1000000000000000000));
-       my $content=$url.$onetimeid.">";
+       my $content=$url.$onetimeid."&perms=".$sendPermissions.">";
 
        open(MAIL,"| mailx -s $subject $address") or die "Can't run mail\n";
+ 
        print MAIL $content;
        close(MAIL);
 
-       eval {ExecSQL($dbuser, $dbpasswd, "insert into rwb_users (name,password,email,referer,guid) values ('temp','temptemp',?,?,?)",undef,$address,$user,$onetimeid);  };
+       eval {ExecSQL($dbuser, $dbpasswd, "insert into rwb_users (name,password,email,referer) values (?,'temptemp',?,?)",undef,$onetimeid,$address,$user);  };
   
     }
   }
@@ -551,6 +595,7 @@ if ($action eq "one-time-add-user") {
     if (!$run) {
 
     my $id=param('one-time-id');
+    my $perms=param('perms');
 
       print start_form(-name=>'OneTimeAddUser'),
         h2('One Time Add User'),
@@ -561,21 +606,24 @@ if ($action eq "one-time-add-user") {
                   hidden(-name=>'run',-default=>['1']),
                     hidden(-name=>'act',-default=>['one-time-add-user']),
                       hidden(-name=>'one-time-id',-default=>[$id]),  
-                        submit,
-                          end_form,
-                            hr;
+                        hidden(-name=>'myperms',-default=>[$perms]),  
+                          submit,
+                            end_form,
+                              hr;
     } else {
       my $name=param('name');
       my $password=param('password');
       my $userid=param('one-time-id');
+      my $myperms=param('myperms');
       my @col;
       my @row;
       
-      eval {@col=ExecSQL($dbuser,$dbpasswd,"select count(*) from rwb_users where guid=?","COL",$userid);};
+      eval {@col=ExecSQL($dbuser,$dbpasswd,"select count(*) from rwb_users where name=?","COL",$userid);};
 
      if (@col[0] > 0)
      {
-      eval {@row = ExecSQL($dbuser,$dbpasswd,"update rwb_users set name=?, password=?, guid=? where guid=?",undef,$name,$password,"",$userid);};
+      eval {@row = ExecSQL($dbuser,$dbpasswd,"update rwb_users set name=?, password=? where name=?",undef,$name,$password,$userid);};
+     print @row;
      print "User $name successfully created.";
      }
      else
@@ -583,13 +631,17 @@ if ($action eq "one-time-add-user") {
        print "link is no longer valid";
      }
   
+      my @desiredPerms = split(',', $myperms);     
+
+      foreach (@desiredPerms)
+      {
+           GiveUserPerm($name,$_);
+      }
+
     }
  
   print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
 }
-
-
-
 
 
 

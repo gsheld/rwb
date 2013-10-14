@@ -42,6 +42,8 @@ function ClearMarkers()
 }
 
 
+
+
 function UpdateMap()
 {
     var color = document.getElementById("color");
@@ -120,6 +122,12 @@ function Reposition(pos)
     usermark.setPosition(new google.maps.LatLng(lat,long));
 }
 
+function getPosition()
+{
+  navigator.geolocation.getCurrentPosition(GiveMyOpinion);
+
+}
+
 function Start(location) 
 {
   var lat = location.coords.latitude;
@@ -146,11 +154,11 @@ function Start(location)
 
   var options = document.getElementById("options");
   options.style.backgroundColor='white';
-  options.innerHTML= '<form name="dataSelection">' +
-                     '<input type="checkbox" name="comm"> Committee Data<br>' +
-                     '<input type="checkbox" name="cand"> Candidate Data<br>' +
-                     '<input type="checkbox" name="ind"> Individual Data<br>' +
-                     '<input type="button" name="makeChange" onClick="ViewShift()" value="Submit"<br>'
+  options.innerHTML= options.innerHTML + 
+                     '<form name="dataSelection">' +
+                     '<input type="checkbox" name="comm" onClick=ViewShift()> Committee Data<br>' +
+                     '<input type="checkbox" name="cand" onClick=ViewShift()> Candidate Data<br>' +
+                     '<input type="checkbox" name="ind" onClick=ViewShift()> Individual Data<br>'
                      '</form>';
 
   google.maps.event.addListener(map,"bounds_changed",ViewShift);

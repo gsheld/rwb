@@ -331,8 +331,7 @@ if ($action eq "base") {
   # The Javascript portion of our app
   #
   print "<script type=\"text/javascript\" src=\"rwb.js\"> </script>";
-
-
+  
 
   #
   #
@@ -350,7 +349,28 @@ if ($action eq "base") {
   #
   # And an area for menu options
   #
-  print "<div id=\"options\" style=\"width:20\%; height:80\%\; float:right\"></div>";
+  
+  my $listcycles = Get_Cycles();
+
+  my @lcycles = split(',',$listcycles);
+
+  print "<div id=\"options\" style=\"width:20\%; height:80\%\; float:right\">";
+ 
+  print "<h3>Data Selection Options</h3>";
+
+  print start_form(-name=>'PrintCycles'),
+               p,
+                  popup_menu(
+                    -name=>'chosen_cycles',
+                    -onChange=>"ViewShift()",
+                     -values=>[@lcycles],
+                      ),
+                    hidden(-name=>'run',-default=>['1']),
+                      hidden(-name=>'act',-default=>['base']),
+                          end_form,
+                            hr; 
+
+  print "</div>";
 
   #
   # And a div to populate with info about nearby stuff
@@ -407,14 +427,17 @@ if ($action eq "base") {
 #
 #
 
-if ($action eq "get_cycles") {
-  if ($run) {
+sub Get_Cycles {
+
     my @cycles;
     eval { @cycles = ExecSQL($dbuser,$dbpasswd, "select distinct cycle from 
       cs339.committee_master union select distinct cycle from cs339.candidate_master union select 
-      distinct cycle from cs339.individual;","COL");};
-    return @cycles; 
-  }
+      distinct cycle from cs339.individual","COL");};
+    
+    my $mycycles = join(',',@cycles);
+
+    return $mycycles;
+  
 }
 
 
@@ -601,7 +624,7 @@ if ($action eq "one-time-add-user") {
         h2('One Time Add User'),
           "Name: ", textfield(-name=>'name'),
             p,
-              "Password: ", textfield(-name=>'password'),
+              "Password: ", password_field(-name=>'password'),
                 p,
                   hidden(-name=>'run',-default=>['1']),
                     hidden(-name=>'act',-default=>['one-time-add-user']),
@@ -644,10 +667,42 @@ if ($action eq "one-time-add-user") {
 }
 
 
+#
+#
+#  GIVE-OPINION-DATA
+#
+#  Allow the user to give an opinion of their current location
+#
 
 
 if ($action eq "give-opinion-data") { 
-  print h2("Giving Location Opinion Data Is Unimplemented");
+ 
+   print "<div id=\"GiveOpinion\" style=\:width:100\%; height:100\%\">";
+
+    if (!$run) { 
+     print start_form(-name=>'GiveOpinion'),
+        h2('Give Opinion of Location'),p,
+          h4("Enter a decimal ranging from -1 for Republican to 1 for Democratic"),p,
+            p,
+              hidden(-name=>'run',-default=>['1']),
+                hidden(-name=>'act',-default=>['give-opinion-data']),
+         
+                     end_form,
+                       hr;
+    print "<script type=\"text/javascript\" src=\"locate.js\"> </script>";
+
+    } else { 
+      
+      my $lat = param("lat");
+      my $long = param("long");
+      my $opinion = param("opinion");
+      
+      eval {ExecSQL($dbuser, $dbpasswd, "insert into rwb_opinions (latitude,longitude,color,submitter) values (?,?,?,?)",undef,$lat,$long,$opinion,$user);  }; 
+      print "$user has entered opinion $opinion at latitude $lat and longitude $long";
+  }
+
+  print "</div>";
+
 }
 
 if ($action eq "give-cs-ind-data") { 

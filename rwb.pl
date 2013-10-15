@@ -487,7 +487,8 @@ if ($action eq "near") {
 
   if ($what{committees}) { 
     my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycle,$format);
-    if (!$error) {
+  #  eval {ExecSQL($dbuser, $dbpasswd,"select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM'");  };
+	 if (!$error) {
       if ($format eq "table") { 
 	print "<h2>Nearby committees</h2>$str";
       } else {
@@ -525,6 +526,10 @@ if ($action eq "near") {
       }
     }
   }
+
+	
+
+
 }
 
 #

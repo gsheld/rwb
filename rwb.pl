@@ -484,11 +484,15 @@ if ($action eq "near") {
   my $longsw = param("longsw");
   my $whatparam = param("what");
   my $format = param("format");
-  my $cycle = param("cycle");
+  my $cycles = param("cycles");
   my %what;
   
   $format = "table" if !defined($format);
-  $cycle = "1112" if !defined($cycle);
+  if (!defined($cycles) || $cycles eq "") {
+ 
+  $cycles= '680456894068459548';
+
+  }
 
   if (!defined($whatparam) || $whatparam eq "all") { 
     %what = ( committees => 1, 
@@ -501,7 +505,7 @@ if ($action eq "near") {
 	       
 
   if ($what{committees}) { 
-    my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycle,$format);
+    my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycles,$format);
   #  eval {ExecSQL($dbuser, $dbpasswd,"select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM'");  };
 	 if (!$error) {
       if ($format eq "table") { 
@@ -512,7 +516,7 @@ if ($action eq "near") {
     }
   }
   if ($what{candidates}) {
-    my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycle,$format);
+    my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 
 	print "<h2>Nearby candidates</h2>$str";
@@ -522,7 +526,7 @@ if ($action eq "near") {
     }
   }
   if ($what{individuals}) {
-    my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycle,$format);
+    my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 
 	print "<h2>Nearby individuals</h2>$str";
@@ -532,7 +536,7 @@ if ($action eq "near") {
     }
   }
   if ($what{opinions} && UserCan($user,"query-opinion-data")) {
-    my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format);
+    my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 
 	print "<h2>Nearby opinions</h2>$str";
@@ -965,8 +969,17 @@ print end_html;
 sub Committees {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
   my @rows;
+  
+  my @cycles = split(',',$cycle);
+
+  my $sql = "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip from cs339.committee_master natural join cs339.cmte_id_to_geo where cycle in (";
+              
+  my $qmarks = join(',', map {"?"} @cycles);
+ 
+  $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
+
   eval { 
-    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip from cs339.committee_master natural join cs339.cmte_id_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
+    @rows = ExecSQL($dbuser, $dbpasswd,$sql,undef,@cycles,$latsw,$latne,$longsw,$longne);
   };
   
   if ($@) { 
@@ -991,8 +1004,17 @@ sub Committees {
 sub Candidates {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
   my @rows;
+
+  my @cycles = split(',',$cycle);
+
+  my $qmarks = join(',', map {"?"} @cycles);
+   
+  my $sql = "select latitude, longitude, cand_name, cand_pty_affiliation, cand_st1, cand_st2, cand_city, cand_st, cand_zip from cs339.candidate_master natural join cs339.cand_id_to_geo where cycle in (";
+
+  $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
+
   eval { 
-    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cand_name, cand_pty_affiliation, cand_st1, cand_st2, cand_city, cand_st, cand_zip from cs339.candidate_master natural join cs339.cand_id_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
+    @rows = ExecSQL($dbuser, $dbpasswd,$sql,undef,@cycles,$latsw,$latne,$longsw,$longne);
   };
   
   if ($@) { 
@@ -1020,8 +1042,17 @@ sub Candidates {
 sub Individuals {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
   my @rows;
+
+  my @cycles = split(',',$cycle);
+
+  my $qmarks = join(',', map {"?"} @cycles);
+
+  my $sql = "select latitude, longitude, name, city, state, zip_code, employer, transaction_amnt from cs339.individual natural join cs339.ind_to_geo where cycle in (";  
+
+  $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
+
   eval { 
-    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, name, city, state, zip_code, employer, transaction_amnt from cs339.individual natural join cs339.ind_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
+    @rows = ExecSQL($dbuser, $dbpasswd,$sql,undef,@cycles,$latsw,$latne,$longsw,$longne);
   };
   
   if ($@) { 

@@ -30,7 +30,9 @@ function UpdateList()
     var table=document.getElementById("cycleTable");
     var row=table.insertRow(-1);
     var cell1=row.insertCell(0);
-    cell1.innerHTML=newCycle;    
+    cell1.innerHTML=newCycle; 
+
+    ViewShift(); 
   }
 
 }
@@ -38,7 +40,15 @@ function UpdateList()
 function deleteCycles()
 {
   myCycles = "";
-  window.alert(myCycles);
+  
+  var table=document.getElementById("cycleTable");
+   
+  while(table.rows.length!=1)
+  {
+    table.deleteRow(1);
+  }
+
+  ViewShift();
 }
 
 function UpdateMapById(id, tag) {
@@ -147,7 +157,7 @@ function ViewShift()
     // debug status flows through by cookie
    
    
-    $.get("rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng()+"&format=raw&what="+groupString+"&cycle=1112", NewData);
+    $.get("rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng()+"&format=raw&what="+groupString+"&cycles="+myCycles, NewData);
  
 }
 

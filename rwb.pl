@@ -515,7 +515,7 @@ if ($action eq "near") {
       }
     }
   }
-  if ($what{opinions}) {
+  if ($what{opinions} && UserCan($user,"query-opinion-data")) {
     my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format);
     if (!$error) {
       if ($format eq "table") { 

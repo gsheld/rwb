@@ -61,8 +61,9 @@ function UpdateMap()
     
     if (document.dataSelection.ind.checked)
     {UpdateMapById("individual_data", "INDIVIDUAL");};
-    
-    UpdateMapById("opinion_data","OPINION");
+   
+    if (document.dataSelection.opin.checked) 
+    {UpdateMapById("opinion_data","OPINION");};
 
 
     color.innerHTML="Ready";
@@ -97,19 +98,30 @@ function ViewShift()
     color.innerHTML="<b><blink>Querying...("+ne.lat()+","+ne.lng()+") to ("+sw.lat()+","+sw.lng()+")</blink></b>";
     color.style.backgroundColor='white';
    
-    var groupString="opinions";
-
+    var groupString="";
     if (document.dataSelection.comm.checked)
-    {groupString+=",committees";};
+    {groupString+="committees";};
     if (document.dataSelection.cand.checked)
-    {groupString+=",candidates"};
+    {
+      if (groupString!=""){groupString+=",";};
+      groupString+="candidates";
+    };
     if (document.dataSelection.ind.checked)
-    {groupString+=",individuals";};
-
+    {
+      if (groupString!=""){groupString+=",";};
+      groupString+="individuals";
+    };
+    if (document.dataSelection.opin.checked)
+    {
+      if (groupString!=""){groupString+=",";};
+      groupString+="opinions";
+    };
     
     // debug status flows through by cookie
+   
+   
     $.get("rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng()+"&format=raw&what="+groupString+"&cycle=1112", NewData);
-
+ 
 }
 
 
@@ -158,7 +170,8 @@ function Start(location)
                      '<form name="dataSelection">' +
                      '<input type="checkbox" name="comm" onClick=ViewShift()> Committee Data<br>' +
                      '<input type="checkbox" name="cand" onClick=ViewShift()> Candidate Data<br>' +
-                     '<input type="checkbox" name="ind" onClick=ViewShift()> Individual Data<br>'
+                     '<input type="checkbox" name="ind" onClick=ViewShift()> Individual Data<br>' +
+                     '<input type="checkbox" name="opin" onClick=ViewShift()> Opinion Data<br>' +
                      '</form>';
 
   google.maps.event.addListener(map,"bounds_changed",ViewShift);

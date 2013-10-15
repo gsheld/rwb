@@ -14,6 +14,33 @@ if (navigator.geolocation)  {
     navigator.geolocation.getCurrentPosition(Start);
 }
 
+var myCycles="";
+
+function UpdateList()
+{
+
+  var newCycle = document.PrintCycles.chosen_cycles.value;
+  var options = document.getElementById("options");
+  if(myCycles.indexOf(newCycle)== -1){
+
+    if(myCycles!=""){myCycles+=',';}
+
+    myCycles+=newCycle;   
+
+    var table=document.getElementById("cycleTable");
+    var row=table.insertRow(-1);
+    var cell1=row.insertCell(0);
+    cell1.innerHTML=newCycle;    
+  }
+
+}
+
+function deleteCycles()
+{
+  myCycles = "";
+  window.alert(myCycles);
+}
+
 function UpdateMapById(id, tag) {
 
     var target = document.getElementById(id);
@@ -173,6 +200,7 @@ function Start(location)
                      '<input type="checkbox" name="ind" onClick=ViewShift()> Individual Data<br>' +
                      '<input type="checkbox" name="opin" onClick=ViewShift()> Opinion Data<br>' +
                      '</form>';
+  options.innerHTML+='<table border="1" id="cycleTable" width="50%"><tr><th>Added Cycles</th></table>';
 
   google.maps.event.addListener(map,"bounds_changed",ViewShift);
   google.maps.event.addListener(map,"center_changed",ViewShift);

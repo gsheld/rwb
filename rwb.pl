@@ -352,7 +352,11 @@ if ($action eq "base") {
   
   my $listcycles = Get_Cycles();
 
+  
+
   my @lcycles = split(',',$listcycles);
+
+  
 
   print "<div id=\"options\" style=\"width:20\%; height:80\%\; float:right\">";
  
@@ -365,11 +369,22 @@ if ($action eq "base") {
 
                   popup_menu(
                     -name=>'chosen_cycles',
-                    -onChange=>"ViewShift()",
                      -values=>[@lcycles],
                       ),
               
+                  button(
+                    -name=>'add_cycle',
+                    -onClick=>"UpdateList()",
+                    -value=>'Add Cycle'
+                      ),
 
+                p,                  
+ 
+                  button(
+                    -name=>'clear_cycles',
+                    -onClick=>"deleteCycles()",
+                    -value=>'Clear Chosen Cycles'
+                      ),
 
                     hidden(-name=>'run',-default=>['1']),
                       hidden(-name=>'act',-default=>['base']),

@@ -505,24 +505,45 @@ if ($action eq "near") {
 	       
 
   if ($what{committees}) { 
+    
+    my @comDem1;
+    my @comDem2;
+    my @comRep1;
+    my @comRep2;
+
     my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycles,$format);
     my @cycles = split(',',$cycles);
     my $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
     my $qmarks = join(',', map {"?"} @cycles);
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{my $sumDem = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@comDem1 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
 
     $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_CAND natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{my $sumDem2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@comDem2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
 
     $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{my $sumRep = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@comRep1 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
 
     $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_CAND natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{my $sumRep2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@comRep2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+
+     my $comDem1 = join(',',@comDem1);
+     my $comDem2 = join(',',@comDem2);
+     my $comRep1 = join(',',@comRep1);
+     my $comRep2 = join(',',@comRep2);
+
+     my $comDem = $comDem1+$comDem2;
+     my $comRep = $comRep1+$comRep2;
+
+     print start_form(-id=>'myCommitteeData'),
+        hidden(-id=>'comDem',-default=>[$comDem]),
+        hidden(-id=>'comRep',-default=>[$comRep]),
+          end_form, hr;
+
+
 
 	 if (!$error) {
       if ($format eq "table") { 
@@ -544,18 +565,26 @@ if ($action eq "near") {
   }
   if ($what{individuals}) {
  
+    my @indDem;
+    my @indRep;
     my @cycles = split(',',$cycles);
     my $sql = "select SUM(TRANSACTION_AMNT) from CS339.INDIVIDUAL natural join CS339.COMMITTEE_MASTER natural join CS339.IND_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
     my $qmarks = join(',', map {"?"} @cycles);
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{my $sumDem = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@indDem = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
   
     my $sql = "select SUM(TRANSACTION_AMNT) from CS339.INDIVIDUAL natural join CS339.COMMITTEE_MASTER natural join CS339.IND_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
     my $qmarks = join(',', map {"?"} @cycles);
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{my $sumRep = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@indRep = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
    
+    my $indDem = join(',',@indDem);
+    my $indRep = join(',',@indRep);
 
+    print start_form(-id=>'myIndividualData'),
+       hidden(-id=>'indDem',-default=>[$indDem]),
+       hidden(-id=>'indRep',-default=>[$indRep]),
+         end_form, hr;
  
     my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
@@ -569,13 +598,19 @@ if ($action eq "near") {
   if ($what{opinions} && UserCan($user,"query-opinion-data")) {
  
     my @stddev;
+    my  @avg;
  
-    eval{@stddev = ExecSQL($dbuser,$dbpasswd,"select stddev(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?","COL",$latsw, $latne, $longsw, $longne);};      eval{my $avg = ExecSQL($dbuser,$dbpasswd,"select avg(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?","COL",$latsw, $latne, $longsw, $longne);};
+
+    eval{@stddev = ExecSQL($dbuser,$dbpasswd,"select stddev(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?","COL",$latsw, $latne, $longsw, $longne);};  
+    eval{@avg = ExecSQL($dbuser,$dbpasswd,"select avg(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?","COL",$latsw, $latne, $longsw, $longne);};
   
-    my $testVar = join(',',@stddev);
+
+    my $avg = join(',',@avg);
+    my $stddev = join(',',@stddev);
 
     print start_form(-id=>'myOpinionData'),
-       hidden(-name=>'hiddenOpinion',-id=>'pleaseWork',-default=>[$testVar]),
+       hidden(-id=>'opinionStddev',-default=>[$stddev]),
+       hidden(-id=>'opinionAvg',-default=>[$avg]),
          end_form, hr;
  
     my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycles,$format);

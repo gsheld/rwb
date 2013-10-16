@@ -423,7 +423,7 @@ if ($action eq "base") {
     if (UserCan($user,"give-cs-ind-data")) {
       print "<p><a href=\"rwb.pl?act=give-cs-ind-data\">Geolocate Individual Contributors</a></p>";
     }
-    if (UserCan($user,"manage-users") || UserCan($user,"-users")) {
+    if ((UserCan($user,"manage-users") || UserCan($user,"-users")) && UserCan($user,"invite-users")) {
       print "<p><a href=\"rwb.pl?act=invite-user\">Invite User</a></p>";
     }
     if (UserCan($user,"manage-users") || UserCan($user,"add-users")) { 
@@ -504,40 +504,69 @@ if ($action eq "near") {
   }
 	       
 
-  if ($what{committees}) { 
-    
+  if ($what{committees}) {
+   
+    my $count = 0;
+
+    my $latsw_comm = $latsw; 
+    my $latne_comm = $latne;
+    my $longsw_comm = $longsw;
+    my $longne_comm = $longne;
+
+
     my @comDem1;
     my @comDem2;
     my @comRep1;
     my @comRep2;
 
     my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycles,$format);
+
     my @cycles = split(',',$cycles);
-    my $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
+    my $sql;
     my $qmarks = join(',', map {"?"} @cycles);
+
+    my $comDem1;
+    my $comDem2;
+    my $comRep1;
+    my $comRep2;
+    my $comDem;
+    my $comRep;
+
+  do {
+
+
+    $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{@comDem1 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@comDem1 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw_comm, $latne_comm, $longsw_comm, $longne_comm);};
 
     $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_CAND natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{@comDem2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@comDem2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw_comm, $latne_comm, $longsw_comm, $longne_comm);};
 
     $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{@comRep1 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@comRep1 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw_comm, $latne_comm, $longsw_comm, $longne_comm);};
 
     $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_CAND natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{@comRep2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@comRep2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw_comm, $latne_comm, $longsw_comm, $longne_comm);};
 
-     my $comDem1 = join(',',@comDem1);
-     my $comDem2 = join(',',@comDem2);
-     my $comRep1 = join(',',@comRep1);
-     my $comRep2 = join(',',@comRep2);
+    $latne_comm = $latsw_comm + .004*(2**$count);
+    $latsw_comm = $latsw_comm - .004*(2**$count);
+    $longne_comm = $longne_comm + .004*(2**$count);
+    $longsw_comm = $longsw_comm - .004*(2**$count);
+    $count++;
 
-     my $comDem = $comDem1+$comDem2;
-     my $comRep = $comRep1+$comRep2;
+    $comDem1 = join(',',@comDem1);
+    $comDem2 = join(',',@comDem2);
+    $comRep1 = join(',',@comRep1);
+    $comRep2 = join(',',@comRep2);
 
+    $comDem = $comDem1+$comDem2;
+    $comRep = $comRep1+$comRep2;
+
+  } while (($count < 20) && ($comDem == 0) && ($comRep == 0)); 
+ 
      print start_form(-id=>'myCommitteeData'),
         hidden(-id=>'comDem',-default=>[$comDem]),
         hidden(-id=>'comRep',-default=>[$comRep]),
@@ -889,7 +918,7 @@ if ($action eq "delete-user") {
     } else {
       my $name=param('name');
       my $error;
-      $error=UserDelete($name);
+      $error=UserDel($name);
       if ($error) { 
 	print "Can't delete user because: $error";
       } else {

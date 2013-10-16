@@ -78,8 +78,8 @@ use Time::ParseDate;
 # You need to override these for access to your database
 #
 
-my $dbuser = "gms130";
-my $dbpasswd = "franco4u";
+my $dbuser = "bjs782";
+my $dbpasswd = "passwordle";
 
 
 #
@@ -511,7 +511,7 @@ if ($action eq "near") {
     my $qmarks = join(',', map {"?"} @cycles);
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
     eval{my $sumDem = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
-   
+
     $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_CAND natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
     eval{my $sumDem2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
@@ -567,9 +567,17 @@ if ($action eq "near") {
     }
   }
   if ($what{opinions} && UserCan($user,"query-opinion-data")) {
+ 
+    my @stddev;
+ 
+    eval{@stddev = ExecSQL($dbuser,$dbpasswd,"select stddev(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?","COL",$latsw, $latne, $longsw, $longne);};      eval{my $avg = ExecSQL($dbuser,$dbpasswd,"select avg(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?","COL",$latsw, $latne, $longsw, $longne);};
   
-    eval{my $stddev = ExecSQL($dbuser,$dbpasswd,"select stddev(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",$latsw, $latne, $longsw, $longne);};      eval{my $avg = ExecSQL($dbuser,$dbpasswd,"select avg(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",$latsw, $latne, $longsw, $longne);};
-   
+    my $testVar = join(',',@stddev);
+
+    print start_form(-id=>'myOpinionData'),
+       hidden(-name=>'hiddenOpinion',-id=>'pleaseWork',-default=>[$testVar]),
+         end_form, hr;
+ 
     my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 

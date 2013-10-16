@@ -92,15 +92,28 @@ function ClearMarkers()
 
 function UpdateMap()
 {
-    var color = document.getElementById("color");
+    var color = document.getElementById("color"),
+        indDem = document.getElementById("indDem"),
+        indRep = document.getElementById("indRep"),
+	comDem = document.getElementById("comDem"),
+	comRep = document.getElementById("comRep");	
     
     color.innerHTML="<b><blink>Updating Display...</blink></b>";
     color.style.backgroundColor='white';
 
     ClearMarkers();
+    color.innerHTML = 'Ready';
 
-    if (document.dataSelection.comm.checked)
-    {UpdateMapById("committee_data","COMMITTEE");};
+    if (document.dataSelection.comm.checked) {
+	UpdateMapById("committee_data","COMMITTEE");
+	if (comDem.value > comRep.value)
+	   color.style.backgroundColor = 'blue';
+	else if (comDem.value < comRep.value)
+	   color.style.backgroundColor = 'red';
+	else
+	   color.style.backgroundColor = 'white';
+	
+    };
     
     if (document.dataSelection.cand.checked)
     {UpdateMapById("candidate_data","CANDIDATE");};
@@ -112,14 +125,16 @@ function UpdateMap()
     {UpdateMapById("opinion_data","OPINION");};
 
 
-    color.innerHTML="Ready";
-    
-    if (Math.random()>0.5) { 
+	 
+
+
+   
+/*    if (Math.random()>0.5) { 
 	color.style.backgroundColor='blue';
     } else {
 	color.style.backgroundColor='red';
     }
-
+*/
 }
 
 function NewData(data)
@@ -228,4 +243,3 @@ function Start(location)
   navigator.geolocation.watchPosition(Reposition);
     
 }
-

@@ -506,7 +506,24 @@ if ($action eq "near") {
 
   if ($what{committees}) { 
     my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycles,$format);
-  #  eval {ExecSQL($dbuser, $dbpasswd,"select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM'");  };
+    my @cycles = split(',',$cycles);
+    my $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
+    my $qmarks = join(',', map {"?"} @cycles);
+    $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
+    eval{my $sumDem = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+   
+    $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_CAND natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
+    $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
+    eval{my $sumDem2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+
+    $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
+    $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
+    eval{my $sumRep = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+
+    $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_CAND natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
+    $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
+    eval{my $sumRep2 = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+
 	 if (!$error) {
       if ($format eq "table") { 
 	print "<h2>Nearby committees</h2>$str";

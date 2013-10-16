@@ -543,6 +543,20 @@ if ($action eq "near") {
     }
   }
   if ($what{individuals}) {
+ 
+    my @cycles = split(',',$cycles);
+    my $sql = "select SUM(TRANSACTION_AMNT) from CS339.INDIVIDUAL natural join CS339.COMMITTEE_MASTER natural join CS339.IND_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
+    my $qmarks = join(',', map {"?"} @cycles);
+    $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
+    eval{my $sumDem = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+  
+    my $sql = "select SUM(TRANSACTION_AMNT) from CS339.INDIVIDUAL natural join CS339.COMMITTEE_MASTER natural join CS339.IND_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
+    my $qmarks = join(',', map {"?"} @cycles);
+    $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
+    eval{my $sumRep = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+   
+
+ 
     my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 
@@ -553,6 +567,9 @@ if ($action eq "near") {
     }
   }
   if ($what{opinions} && UserCan($user,"query-opinion-data")) {
+  
+    eval{my $stddev = ExecSQL($dbuser,$dbpasswd,"select stddev(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",$latsw, $latne, $longsw, $longne);};      eval{my $avg = ExecSQL($dbuser,$dbpasswd,"select avg(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?",$latsw, $latne, $longsw, $longne);};
+   
     my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycles,$format);
     if (!$error) {
       if ($format eq "table") { 

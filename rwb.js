@@ -16,6 +16,55 @@ if (navigator.geolocation)  {
 
 var row, myCycles="", cycleCount = 0;
 
+function ShowAnalysis()
+{
+    
+  color.style.backgroundColor='white';
+  color.innerHTML="Ready<br>"; 
+
+  if (document.dataSelection.showData[0].checked && document.dataSelection.comm.checked){
+
+      if (parseInt(document.getElementById("comDem").value) > parseInt(document.getElementById("comRep").value)) {
+         color.style.backgroundColor='blue';
+      } else if (parseInt(document.getElementById("comDem").value) < parseInt(document.getElementById("comRep").value)) {
+         color.style.backgroundColor='red';
+      }
+
+      color.innerHTML+="Democratic Money in View: $" + document.getElementById("comDem").value + "<br>";
+      color.innerHTML+="Rebuplican Money in View: $" + document.getElementById("comRep").value;
+
+   }
+
+   if (document.dataSelection.showData[1].checked && document.dataSelection.ind.checked){
+
+     if (parseInt(document.getElementById("indDem").value) > parseInt(document.getElementById("indRep").value)) {
+         color.style.backgroundColor='blue';
+     } else if (parseInt(document.getElementById("indDem").value) < parseInt(document.getElementById("comRep").value)) {
+         color.style.backgroundColor='red';
+     }
+
+     color.innerHTML+="Democratic Money in View: $" + document.getElementById("indDem").value + "<br>";
+     color.innerHTML+="Rebuplican Money in View: $" + document.getElementById("indRep").value;
+
+   }
+
+   if (document.dataSelection.showData[2].checked && document.dataSelection.opin.checked){
+
+     if (parseFloat(document.getElementById("opinionAvg").value)>0) {
+         color.style.backgroundColor='blue';
+     } else if (parseFloat(document.getElementById("opinionAvg").value)<0) {
+         color.style.backgroundColor='red';
+     }
+
+     color.innerHTML+="Average Opinion (-1 for Rep, 1 for Dem): " +
+          parseFloat(document.getElementById("opinionAvg").value).toFixed(5) + "<br>";
+     color.innerHTML+="Standard Deviation of Opinions in Area: " +
+          parseFloat(document.getElementById("opinionStddev").value).toFixed(5);
+
+   }
+}
+  
+
 function UpdateList()
 {
 
@@ -114,46 +163,9 @@ function UpdateMap()
 
     color.innerHTML="Ready<br>";
    
-   if (document.dataSelection.showData[0].checked && document.dataSelection.comm.checked){
+    ShowAnalysis();
 
-     if (parseInt(document.getElementById("comDem").value) > parseInt(document.getElementById("comRep").value)) { 
-  	color.style.backgroundColor='blue';
-     } else if (parseInt(document.getElementById("comDem").value) < parseInt(document.getElementById("comRep").value)) {
-        color.style.backgroundColor='red'; 
-     }
-
-     color.innerHTML+="Democratic Money in View: $" + document.getElementById("comDem").value + "<br>";
-     color.innerHTML+="Rebuplican Money in View: $" + document.getElementById("comRep").value;
-
-   }
-
-   if (document.dataSelection.showData[1].checked && document.dataSelection.ind.checked){
-
-     if (parseInt(document.getElementById("indDem").value) > parseInt(document.getElementById("indRep").value)) {
-         color.style.backgroundColor='blue';
-     } else if (parseInt(document.getElementById("indDem").value) < parseInt(document.getElementById("comRep").value)) {
-         color.style.backgroundColor='red';
-     }
-
-     color.innerHTML+="Democratic Money in View: $" + document.getElementById("indDem").value + "<br>";
-     color.innerHTML+="Rebuplican Money in View: $" + document.getElementById("indRep").value;
-
-   }
-
-   if (document.dataSelection.showData[2].checked && document.dataSelection.opin.checked){
-
-    if (parseFloat(document.getElementById("opinionAvg").value)>0) {
-        color.style.backgroundColor='blue';
-    } else if (parseFloat(document.getElementById("opinionAvg").value)<0) {
-        color.style.backgroundColor='red'; 
-    }
-
-     color.innerHTML+="Average Opinion (-1 for Rep, 1 for Dem): " + 
-          parseFloat(document.getElementById("opinionAvg").value).toFixed(5) + "<br>";
-     color.innerHTML+="Standard Deviation of Opinions in Area: " + 
-          parseFloat(document.getElementById("opinionStddev").value).toFixed(5);
-
-   }
+   
 }
 
 function NewData(data)
@@ -249,12 +261,12 @@ function Start(location)
   options.innerHTML= options.innerHTML + 
                      '<form name="dataSelection">' +
                      '<input type="checkbox" name="comm" onClick=ViewShift()> Committee Data' + 
-                     '<input type="radio" name="showData" onClick=ViewShift() value="c"> Analyze Data<br>' +
+                     '<input type="radio" name="showData" onClick=ShowAnalysis() value="c"> Analyze Data<br>' +
                      '<input type="checkbox" name="cand" onClick=ViewShift()> Candidate Data<br>' +
                      '<input type="checkbox" name="ind" onClick=ViewShift()> Individual Data' + 
-                     '<input type="radio" name="showData" onClick=ViewShift() value="i"> Analyze Data<br>' + 
+                     '<input type="radio" name="showData" onClick=ShowAnalysis() value="i"> Analyze Data<br>' + 
                      '<input type="checkbox" name="opin" onClick=ViewShift()> Opinion Data' + 
-                     '<input type="radio" name="showData" onClick=ViewShift() value="o"> Analyze Data<br>' +
+                     '<input type="radio" name="showData" onClick=ShowAnalysis() value="o"> Analyze Data<br>' +
                      '</form>';
   options.innerHTML+='<table border="1" id="cycleTable"><th colspan = "2">Added Cycles</th></table>';
 

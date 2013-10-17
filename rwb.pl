@@ -611,13 +611,13 @@ if ($action eq "near") {
     my $indRep;
 
     do {
-    my $sql = "select SUM(TRANSACTION_AMNT) from CS339.INDIVIDUAL natural join CS339.COMMITTEE_MASTER natural join CS339.IND_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
-    my $qmarks = join(',', map {"?"} @cycles);
+    $sql = "select SUM(TRANSACTION_AMNT) from CS339.INDIVIDUAL natural join CS339.COMMITTEE_MASTER natural join CS339.IND_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
+   
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
     eval{@indDem = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw_ind, $latne_ind, $longsw_ind, $longne_ind);};
   
-    my $sql = "select SUM(TRANSACTION_AMNT) from CS339.INDIVIDUAL natural join CS339.COMMITTEE_MASTER natural join CS339.IND_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
-    my $qmarks = join(',', map {"?"} @cycles);
+    $sql = "select SUM(TRANSACTION_AMNT) from CS339.INDIVIDUAL natural join CS339.COMMITTEE_MASTER natural join CS339.IND_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
+   
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
     eval{@indRep = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw_ind, $latne_ind, $longsw_ind, $longne_ind);};
 
@@ -649,15 +649,35 @@ if ($action eq "near") {
   if ($what{opinions} && UserCan($user,"query-opinion-data")) {
  
     my @stddev;
-    my  @avg;
- 
+    my @avg;
 
-    eval{@stddev = ExecSQL($dbuser,$dbpasswd,"select stddev(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?","COL",$latsw, $latne, $longsw, $longne);};  
-    eval{@avg = ExecSQL($dbuser,$dbpasswd,"select avg(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?","COL",$latsw, $latne, $longsw, $longne);};
+    my $stddev;
+    my $avg;
+    my $count = 0; 
+    
+    my $latne_opin=$latne;
+    my $latsw_opin=$latsw;
+    my $longne_opin=$longne;
+    my $longsw_opin=$longsw;
+  
+    do {
+
+    eval{@stddev = ExecSQL($dbuser,$dbpasswd,"select stddev(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?","COL",$latsw_opin, $latne_opin, $longsw_opin, $longne_opin);};  
+
+    eval{@avg = ExecSQL($dbuser,$dbpasswd,"select avg(color) from rwb_opinions where latitude>? and latitude<? and longitude>? and longitude<?","COL",$latsw_opin, $latne_opin, $longsw_opin, $longne_opin);};
   
 
-    my $avg = join(',',@avg);
-    my $stddev = join(',',@stddev);
+    $avg = join(',',@avg);
+    $stddev = join(',',@stddev);
+
+    $latne_opin = $latne_opin + .004*(2**$count);
+    $latsw_opin = $latsw_opin - .004*(2**$count);
+    $longne_opin = $longne_opin + .004*(2**$count);
+    $longsw_opin = $longsw_opin - .004*(2**$count);
+    $count++;    
+
+    } while(($count<20) && ($avg == 0) && ($stddev == 0));
+
 
     print start_form(-id=>'myOpinionData'),
        hidden(-id=>'opinionStddev',-default=>[$stddev]),

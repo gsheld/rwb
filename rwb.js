@@ -88,6 +88,13 @@ function UpdateList()
    cell2.innerHTML = newCycle;
    cell2.width = "50%";		
    }
+    
+    document.dataSelection.comm.disabled=false;
+    document.dataSelection.cand.disabled=false;
+    document.dataSelection.ind.disabled=false;
+    document.dataSelection.showData[0].disabled=false;
+    document.dataSelection.showData[1].disabled=false;
+
     cycleCount++;
     ViewShift(); 
   }
@@ -105,7 +112,17 @@ function deleteCycles()
   {
     table.deleteRow(1);
   }
-
+  document.dataSelection.comm.disabled=true;
+  document.dataSelection.cand.disabled=true;
+  document.dataSelection.ind.disabled=true;
+  document.dataSelection.showData[0].disabled=true;
+  document.dataSelection.showData[1].disabled=true;
+  document.dataSelection.comm.checked=false;
+  document.dataSelection.cand.checked=false;
+  document.dataSelection.ind.checked=false;
+  document.dataSelection.showData[0].checked=false;
+  document.dataSelection.showData[1].checked=false;
+  
   ViewShift();
 }
 
@@ -260,11 +277,11 @@ function Start(location)
   options.style.backgroundColor='white';
   options.innerHTML= options.innerHTML + 
                      '<form name="dataSelection">' +
-                     '<input type="checkbox" name="comm" onClick=ViewShift()> Committee Data' + 
-                     '<input type="radio" name="showData" onClick=ShowAnalysis() value="c"> Analyze Data<br>' +
-                     '<input type="checkbox" name="cand" onClick=ViewShift()> Candidate Data<br>' +
-                     '<input type="checkbox" name="ind" onClick=ViewShift()> Individual Data' + 
-                     '<input type="radio" name="showData" onClick=ShowAnalysis() value="i"> Analyze Data<br>' + 
+                     '<input type="checkbox" name="comm" onClick=ViewShift() disabled=true> Committee Data' + 
+                     '<input type="radio" name="showData" onClick=ShowAnalysis() value="c" disabled=true> Analyze Data<br>' +
+                     '<input type="checkbox" name="cand" onClick=ViewShift() disabled=true> Candidate Data<br>' +
+                     '<input type="checkbox" name="ind" onClick=ViewShift() disabled=true> Individual Data' + 
+                     '<input type="radio" name="showData" onClick=ShowAnalysis() value="i" disabled=true> Analyze Data<br>' + 
                      '<input type="checkbox" name="opin" onClick=ViewShift()> Opinion Data' + 
                      '<input type="radio" name="showData" onClick=ShowAnalysis() value="o"> Analyze Data<br>' +
                      '</form>';

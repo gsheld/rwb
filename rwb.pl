@@ -505,22 +505,20 @@ if ($action eq "near") {
 	       
 
   if ($what{committees}) {
-   
-    my $count = 0;
 
+    my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycles,$format);
+
+    my $count = 0;
     my $latsw_comm = $latsw; 
     my $latne_comm = $latne;
     my $longsw_comm = $longsw;
     my $longne_comm = $longne;
 
-
     my @comDem1;
     my @comDem2;
     my @comRep1;
     my @comRep2;
-
-    my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycles,$format);
-
+  
     my @cycles = split(',',$cycles);
     my $sql;
     my $qmarks = join(',', map {"?"} @cycles);
@@ -533,7 +531,6 @@ if ($action eq "near") {
     my $comRep;
 
   do {
-
 
     $sql = "select SUM(TRANSACTION_AMNT) from CS339.COMMITTEE_MASTER natural join CS339.COMM_TO_COMM natural join CS339.CMTE_ID_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
@@ -566,13 +563,11 @@ if ($action eq "near") {
     $comRep = $comRep1+$comRep2;
 
   } while (($count < 20) && ($comDem == 0) && ($comRep == 0)); 
- 
+
      print start_form(-id=>'myCommitteeData'),
         hidden(-id=>'comDem',-default=>[$comDem]),
         hidden(-id=>'comRep',-default=>[$comRep]),
           end_form, hr;
-
-
 
 	 if (!$error) {
       if ($format eq "table") { 
@@ -583,7 +578,12 @@ if ($action eq "near") {
     }
   }
   if ($what{candidates}) {
-    my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycles,$format);
+   
+    my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycles,$format);   
+   
+    my @indDem;
+    my @indRep;
+
     if (!$error) {
       if ($format eq "table") { 
 	print "<h2>Nearby candidates</h2>$str";
@@ -596,19 +596,41 @@ if ($action eq "near") {
  
     my @indDem;
     my @indRep;
+    
+    my $count = 0;
+    my $latsw_ind = $latsw; 
+    my $latne_ind = $latne;
+    my $longsw_ind = $longsw;
+    my $longne_ind = $longne;
+
     my @cycles = split(',',$cycles);
+    my $sql;
+    my $qmarks = join(',', map {"?"} @cycles);
+
+    my $indDem;
+    my $indRep;
+
+    do {
     my $sql = "select SUM(TRANSACTION_AMNT) from CS339.INDIVIDUAL natural join CS339.COMMITTEE_MASTER natural join CS339.IND_TO_GEO where CMTE_PTY_AFFILIATION in ('dem','Dem','DEM') and cycle in ("; 
     my $qmarks = join(',', map {"?"} @cycles);
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{@indDem = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
+    eval{@indDem = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw_ind, $latne_ind, $longsw_ind, $longne_ind);};
   
     my $sql = "select SUM(TRANSACTION_AMNT) from CS339.INDIVIDUAL natural join CS339.COMMITTEE_MASTER natural join CS339.IND_TO_GEO where CMTE_PTY_AFFILIATION in ('rep','Rep','REP','GOP') and cycle in ("; 
     my $qmarks = join(',', map {"?"} @cycles);
     $sql = $sql.$qmarks.") and latitude>? and latitude<? and longitude>? and longitude<?";
-    eval{@indRep = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw, $latne, $longsw, $longne);};
-   
-    my $indDem = join(',',@indDem);
-    my $indRep = join(',',@indRep);
+    eval{@indRep = ExecSQL($dbuser, $dbpasswd, $sql,"COL" , @cycles, $latsw_ind, $latne_ind, $longsw_ind, $longne_ind);};
+
+    $latne_ind = $latsw_ind + .004*(2**$count);
+    $latsw_ind = $latsw_ind - .004*(2**$count);
+    $longne_ind = $longne_ind + .004*(2**$count);
+    $longsw_ind = $longsw_ind - .004*(2**$count);
+    $count++;
+
+    $indDem = join(',',@indDem); 
+    $indRep = join(',',@indRep);
+
+    } while (($count < 20) && ($indDem == 0) && ($indRep == 0));   
 
     print start_form(-id=>'myIndividualData'),
        hidden(-id=>'indDem',-default=>[$indDem]),

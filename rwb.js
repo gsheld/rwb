@@ -18,9 +18,7 @@ var row, myCycles="", cycleCount = 0;
 
 function ShowAnalysis()
 {
-    
-  color.style.backgroundColor='white';
-  color.innerHTML="Ready<br>"; 
+ 
 
   if (document.dataSelection.showData[0].checked && document.dataSelection.comm.checked){
 
@@ -29,7 +27,12 @@ function ShowAnalysis()
       } else if (parseInt(document.getElementById("comDem").value) < parseInt(document.getElementById("comRep").value)) {
          color.style.backgroundColor='red';
       }
+      else {
+         color.style.backgroundColor='white';
+       
+      }
 
+      color.innerHTML="Ready<br>";
       color.innerHTML+="Democratic Money in View: $" + document.getElementById("comDem").value + "<br>";
       color.innerHTML+="Rebuplican Money in View: $" + document.getElementById("comRep").value;
 
@@ -43,6 +46,7 @@ function ShowAnalysis()
          color.style.backgroundColor='red';
      }
 
+     color.innerHTML="Ready<br>";
      color.innerHTML+="Democratic Money in View: $" + document.getElementById("indDem").value + "<br>";
      color.innerHTML+="Rebuplican Money in View: $" + document.getElementById("indRep").value;
 
@@ -56,6 +60,7 @@ function ShowAnalysis()
          color.style.backgroundColor='red';
      }
 
+     color.innerHTML="Ready<br>";
      color.innerHTML+="Average Opinion (-1 for Rep, 1 for Dem): " +
           parseFloat(document.getElementById("opinionAvg").value).toFixed(5) + "<br>";
      color.innerHTML+="Standard Deviation of Opinions in Area: " +
